@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvQuestion;
     private Button btCheckAnswer;
     private Button btSolve;
+    private boolean firstDisplayGridView=true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,12 +47,13 @@ public class MainActivity extends AppCompatActivity {
 
 
         for(int i=0;i<169;i++){
-            PuzzleCell puzzleCell=new PuzzleCell(Color.rgb(224, 224, 209),"");
+            PuzzleCell puzzleCell=new PuzzleCell(Color.BLACK,"");
             puzzleCells.add(puzzleCell);
         }
         setInitialColor();
 
-        adapter=new PuzzleAdapter(this,puzzleCells);
+        adapter=new PuzzleAdapter(this,puzzleCells,firstDisplayGridView);
+        firstDisplayGridView=false;
         // Set custom adapter (GridAdapter) to gridview
 
         gridView.setAdapter(adapter);

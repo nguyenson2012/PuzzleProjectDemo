@@ -7,7 +7,8 @@
         android:id="@+id/layout_puzzle"
         android:orientation="vertical"
         android:layout_width="273dp"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@drawable/background_puzzle">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
