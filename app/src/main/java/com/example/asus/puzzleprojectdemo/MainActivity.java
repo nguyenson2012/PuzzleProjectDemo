@@ -1,10 +1,14 @@
 package com.example.asus.puzzleprojectdemo;
 
+import android.content.ClipData;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -78,7 +82,9 @@ public class MainActivity extends AppCompatActivity {
                     fillCharacter(button.getText()+"");
                 }
             });
+            button.setOnTouchListener(new ChoiceTouchListener());
         }
+        gridView.setOnDragListener(new ChoiceDragListener());
         btBackspace.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -247,6 +253,61 @@ public class MainActivity extends AppCompatActivity {
         QuestionPuzzle eat=new QuestionPuzzle(0,"EAT","___ a humberger",new Vector2(11,1),false);
         listQuestion.add(eat);
 
+    }
+
+    private final class ChoiceTouchListener implements View.OnTouchListener {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                //setup drag
+                ClipData data = ClipData.newPlainText("", "");
+                View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
+
+                //start dragging the item touched
+                view.startDrag(data, shadowBuilder, view, 0);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    private class ChoiceDragListener implements View.OnDragListener {
+        @Override
+        public boolean onDrag(View v, DragEvent dragEvent) {
+            switch (dragEvent.getAction()) {
+                case DragEvent.ACTION_DRAG_STARTED:
+                    //no action necessary
+                    break;
+                case DragEvent.ACTION_DRAG_ENTERED:
+                    //no action necessary
+                    break;
+                case DragEvent.ACTION_DRAG_EXITED:
+                    //no action necessary
+                    break;
+                case DragEvent.ACTION_DROP:
+                    int newPosition = gridView.pointToPosition(
+                            (int) (dragEvent.getX()), (int) dragEvent.getY());
+                    View view = (View) dragEvent.getLocalState();
+                    //stop displaying the view where it was before it was dragged
+                    view.setVisibility(View.INVISIBLE);
+                    //view being dragged and dropped
+                    Button dropped = (Button) view;
+                    if(newPosition!=GridView.INVALID_POSITION) {
+                        puzzleCells.get(newPosition).setCharacterInCell(dropped.getText() + "");
+                        adapter.notifyDataSetChanged();
+                        gridView.invalidateViews();
+                    }
+                    break;
+                case DragEvent.ACTION_DRAG_ENDED:
+                    //no action necessary
+                    break;
+                default:
+                    break;
+            }
+            return true;
+        }
     }
 
     @Override

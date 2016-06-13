@@ -1,5 +1,8 @@
 package com.example.asus.puzzleprojectdemo;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -7,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.LinearInterpolator;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -26,11 +30,16 @@ public class PuzzleAdapter extends BaseAdapter {
     private int[] positionCharacter;
     private int dem=0;
     private boolean firstDisplay=false;
+    ObjectAnimator scaleAnimationX=new ObjectAnimator();
+    ObjectAnimator scaleAnimationY=new ObjectAnimator();
+    ObjectAnimator scaleAnimationSmallerX=new ObjectAnimator();
+    ObjectAnimator scaleAnimationSmallerY=new ObjectAnimator();
 
     //Constructor to initialize values
     public PuzzleAdapter(Context context, ArrayList<PuzzleCell> listPuzzleCell,Boolean firstDisplay) {
         this.context        = context;
         this.listPuzzleCell     = listPuzzleCell;
+        settingAnimation();
         constant=Constant.getInstance();
         listQuestion=constant.listQuestion;
         positionCharacter=new int[100];
@@ -50,6 +59,31 @@ public class PuzzleAdapter extends BaseAdapter {
                 }
         }
 
+    }
+
+    private void settingAnimation() {
+        scaleAnimationX.setStartDelay(0);
+        scaleAnimationX.setRepeatCount(0);
+        scaleAnimationX.setRepeatMode(ValueAnimator.REVERSE);
+        scaleAnimationX.setInterpolator(new LinearInterpolator());
+        scaleAnimationY.setStartDelay(0);
+        scaleAnimationY.setRepeatCount(0);
+        scaleAnimationY.setRepeatMode(ValueAnimator.REVERSE);
+        scaleAnimationY.setInterpolator(new LinearInterpolator());
+    }
+    private void startScaleAnimation(View view,int duration){
+        scaleAnimationX=ObjectAnimator.ofFloat(view,"scaleX",new float[]{0.5f,1.5f}).setDuration(duration);
+        scaleAnimationY=ObjectAnimator.ofFloat(view,"scaleY",new float[]{0.5f,1.5f}).setDuration(duration);
+        final AnimatorSet animation = new AnimatorSet();
+        ((AnimatorSet) animation).playTogether(scaleAnimationX,scaleAnimationY);
+        animation.start();
+        if(!animation.isRunning()) {
+            scaleAnimationSmallerX = ObjectAnimator.ofFloat(view, "scaleX", new float[]{1.5f, 1.0f}).setDuration(duration);
+            scaleAnimationSmallerY = ObjectAnimator.ofFloat(view, "scaleY", new float[]{1.5f, 1.0f}).setDuration(duration);
+            final AnimatorSet animationSmall = new AnimatorSet();
+            ((AnimatorSet) animationSmall).playTogether(scaleAnimationSmallerX, scaleAnimationSmallerY);
+            animationSmall.start();
+        }
     }
 
     @Override
@@ -80,29 +114,56 @@ public class PuzzleAdapter extends BaseAdapter {
         LayoutInflater inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        View gridView;
+        View gridViewItem;
 
         if (convertView == null) {
-            gridView = new View(context);
+            gridViewItem = new View(context);
             // get layout from grid_item.xml ( Defined Below )
-            gridView = inflater.inflate( R.layout.grid_view_item , null);
+            gridViewItem = inflater.inflate( R.layout.grid_view_item , null);
         } else {
-            gridView = (View) convertView;
+            gridViewItem = (View) convertView;
 
         }
-        ImageView buttonPuzzle=(ImageView)gridView.findViewById(R.id.grid_item_button);
-        TextView tvPuzzle=(TextView)gridView.findViewById(R.id.textview_puzzle);
+        ImageView buttonPuzzle=(ImageView)gridViewItem.findViewById(R.id.grid_item_button);
+        TextView tvPuzzle=(TextView)gridViewItem.findViewById(R.id.textview_puzzle);
         tvPuzzle.setText(listPuzzleCell.get(position).getCharacterInCell());
         if(listPuzzleCell.get(position).getColorCell()== Color.BLACK)
-            gridView.setAlpha(0.0f);
+            gridViewItem.setAlpha(0.0f);
         else
-            gridView.setBackgroundColor(listPuzzleCell.get(position).getColorCell());
-        Animation animation= AnimationUtils.loadAnimation(context,R.anim.gridview_animation);
+            gridViewItem.setBackgroundColor(listPuzzleCell.get(position).getColorCell());
+        for(QuestionPuzzle question:listQuestion){
+            int positionImage;
+            if(question.isCross()) {
+                positionImage = question.getPositionFirst().getX() + question.getPositionFirst().getY() * 13 + question.getAnswer().length();
+            }else {
+                positionImage = question.getPositionFirst().getX() + question.getPositionFirst().getY() * 13 + question.getAnswer().length()*13;
+            }
+            if(positionImage%13==0||positionImage>168){
+                positionImage=question.getPositionFirst().getX() + question.getPositionFirst().getY() * 13-1;
+            }
+            if(position==positionImage){
+                gridViewItem.setAlpha(1.0f);
+                buttonPuzzle.setImageResource(R.drawable.action_word);
+            }
+            }
+//        Animation animation= AnimationUtils.loadAnimation(context,R.anim.gridview_animation);
+//        Animation animation2= AnimationUtils.loadAnimation(context,R.anim.gridview_animation2);
+//        for(int i=0;i<dem;i++)
+//            if(position==positionCharacter[i]&&firstDisplay) {
+//                if(position%2==0)
+//                    gridView.startAnimation(animation);
+//                else
+//                    gridView.startAnimation(animation2);
+//            }
         for(int i=0;i<dem;i++)
-            if(position==positionCharacter[i]&&firstDisplay)
-                gridView.startAnimation(animation);
+            if(position==positionCharacter[i]&&firstDisplay) {
+                int column=position%13;
+//                Animation animationScale = AnimationUtils.loadAnimation(context, R.anim.scale);
+//                gridViewItem.startAnimation(animationScale);
+                //startScaleAnimation(gridView,1000+column*130);
+            }
         if(position==168)
             firstDisplay=false;
-        return gridView;
+        return gridViewItem;
     }
 }
